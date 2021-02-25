@@ -2,7 +2,16 @@
 
 ---
 
-## TravelProject 运行环境
+## StudyProject 运行环境
+
+### window环境
+
+```shell
+#打开电脑之后直接输入cmd,然后直接回车
+#弹出命令提示行之后
+#直接输入git clone https://github.com/xiaochen19v587/StudyProject.git
+# 等待下载完成
+```
 
 ### Linux环境
 
