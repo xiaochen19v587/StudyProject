@@ -8,7 +8,6 @@
     </div>
 </div>
 
-<embed width="800" height="600" src="{{ pdf_url }}"></embed>
 <!--课程内容-->
 <div id="team1">
     <div class="container">
@@ -16,10 +15,18 @@
             <button class="collect-button">已收藏</button> {% else %}
             <button class="collect-button">收藏</button> {% endif %}
         </h2>
-        <div class="title1">{{scenic.content|safe}}</div>
+
+        <div class="title1">{{scenic.content|safe}}
+
+            <div>
+                <img width="400" height="400" src="{{ url_for('static',filename='img/Figure_1.png') }}" alt="">
+                <embed width="800" height="400" src="{{ pdf_url }}"></embed>
+            </div>
+        </div>
     </div>
 </div>
 <!--攻略列表-->
+
 <div class="container" style="padding-bottom: 100px">
     <h2 class="animated">{{scenic.title}}学习攻略</h2>
     <div class="row">

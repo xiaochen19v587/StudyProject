@@ -103,7 +103,6 @@ def info(id=None):  # id 为课程ID
     """
     详情页
     """
-    print(int(id))
     scenic = Scenic.query.get_or_404(int(id))  # 根据课程ID获取课程数据，如果不存在返回404
     user_id = session.get('user_id', None)    # 获取用户ID,判断用户是否登录
     if user_id:                              # 如果已经登录

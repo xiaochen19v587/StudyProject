@@ -1,9 +1,7 @@
-{% extends 'admin/admin.html' %}
-{% import "common/admin_page.html" as pg %}
-{% block content %}
+{% extends 'admin/admin.html' %} {% import "common/admin_page.html" as pg %} {% block content %}
 <!--内容-->
 <section class="content-header">
-    <h1>易学通管理系统</h1>{# 修改 #}
+    <h1>学习宝管理系统</h1>{# 修改 #}
     <ol class="breadcrumb">
         <li><a href="#"><i class="fa fa-dashboard"></i> 攻略管理</a></li>{# 修改 #}
         <li class="active">攻略列表</li>{# 修改 #}
@@ -17,49 +15,46 @@
                     <h3 class="box-title">攻略列表</h3>{# 修改 #}
                     <div class="box-tools">
                         <form action="" method="GET">
-                        <div class="input-group input-group-sm" style="width: 150px;">
-                            <input type="text" name="keywords" class="form-control pull-right"
-                                   placeholder="请输入关键字...">
-                            <div class="input-group-btn">
-                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i>
+                            <div class="input-group input-group-sm" style="width: 150px;">
+                                <input type="text" name="keywords" class="form-control pull-right" placeholder="请输入关键字...">
+                                <div class="input-group-btn">
+                                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i>
                                 </button>
+                                </div>
                             </div>
-                        </div>
                         </form>
                     </div>
                 </div>
                 <div class="box-body table-responsive no-padding">
                     {% for msg in get_flashed_messages(category_filter=["ok"]) %}
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×
                             </button>
-                            <h4><i class="icon fa fa-check"></i> 操作成功</h4>
-                            {{ msg }}
-                        </div>
+                        <h4><i class="icon fa fa-check"></i> 操作成功</h4>
+                        {{ msg }}
+                    </div>
                     {% endfor %}
                     <table class="table table-hover">
                         <tbody>
-                        <tr>
-                            <th>编号</th>
-                            <th>攻略名称</th>{# 修改 #}
-                            <th>攻略来源</th>{# 修改 #}
-                            <th>作者</th>
-                            <th>操作事项</th>
-                        </tr>
-                        {% for v in page_data.items %}
+                            <tr>
+                                <th>编号</th>
+                                <th>攻略名称</th>{# 修改 #}
+                                <th>攻略来源</th>{# 修改 #}
+                                <th>作者</th>
+                                <th>操作事项</th>
+                            </tr>
+                            {% for v in page_data.items %}
                             <tr>
                                 <td>{{ v.id }}</td>
                                 <td>{{ v.title }}</td>
-                                <td>{{ v.scenic.title }}</td>    
+                                <td>{{ v.scenic.title }}</td>
                                 <td>{{ v.author }}</td>
                                 <td>
-                                    <a href="{{url_for('admin.travels_edit', id=v.id)}}"
-                                       class="label label-success">编辑</a>
-                                    &nbsp;
+                                    <a href="{{url_for('admin.travels_edit', id=v.id)}}" class="label label-success">编辑</a> &nbsp;
                                     <a href="{{url_for('admin.travels_del',id=v.id)}}" class="label label-danger">删除</a>
                                 </td>
                             </tr>
-                        {% endfor %}
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -71,13 +66,11 @@
     </div>
 </section>
 <!--内容-->
-{% endblock %}
-
-{% block js %}
-    <script>
-        $(document).ready(function () {
-            $("#g-5").addClass("active");
-            $("#g-5-2").addClass("active");
-        });
-    </script>
+{% endblock %} {% block js %}
+<script>
+    $(document).ready(function() {
+        $("#g-5").addClass("active");
+        $("#g-5-2").addClass("active");
+    });
+</script>
 {% endblock %}
