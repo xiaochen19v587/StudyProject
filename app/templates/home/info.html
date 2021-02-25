@@ -15,13 +15,16 @@
             <button class="collect-button">已收藏</button> {% else %}
             <button class="collect-button">收藏</button> {% endif %}
         </h2>
-
+        <div>
+            <video width="335" height="240" controls>
+                <source src="{{ video_url }}" type="video/mp4">
+              您的浏览器不支持Video标签。
+              </video>
+            <embed width="800" height="400" src="{{ pdf_url }}"></embed>
+        </div>
         <div class="title1">{{scenic.content|safe}}
 
-            <div>
-                <img width="400" height="400" src="{{ url_for('static',filename='img/Figure_1.png') }}" alt="">
-                <embed width="800" height="400" src="{{ pdf_url }}"></embed>
-            </div>
+
         </div>
     </div>
 </div>

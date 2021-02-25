@@ -113,13 +113,10 @@ def info(id=None):  # id 为课程ID
     else:                                    # 用户未登录状态
         user_id = 0
         count = 0
-    # if int(id) == 6:
-    #     pdf_url = url_for('static',filename='pdf/java.pdf')
-    # else:
-    #     pdf_url = ''
-    pdf_url = url_for('static', filename='pdf/java.pdf')
-    # 渲染模板
-    return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url)
+    video_url = 'https://www.runoob.com/try/demo_source/mov_bbb.mp4'
+    pdf_url = url_for(
+        'static', filename='pdf/{}/{}.pdf'.format(int(id), scenic.title))
+    return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url,video_url=video_url)
 
 
 @home.route("/collect_add/")
