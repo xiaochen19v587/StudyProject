@@ -2,12 +2,13 @@
 # 手机号注册功能_63
 from . import home
 from app import db
-from app.home.forms import LoginForm,RegisterForm,SuggetionForm
-from app.models import User ,Area,Scenic,Travels,Collect,Suggestion,Userlog
+from app.home.forms import LoginForm, RegisterForm, SuggetionForm
+from app.models import User, Area, Scenic, Travels, Collect, Suggestion, Userlog
 from flask import render_template, url_for, redirect, flash, session, request
 from werkzeug.security import generate_password_hash
 from sqlalchemy import and_
 from functools import wraps
+
 
 def user_login(f):
     """
@@ -21,6 +22,7 @@ def user_login(f):
 
     return decorated_function
 
+
 @home.route("/login/", methods=["GET", "POST"])
 def login():
     """
@@ -31,23 +33,25 @@ def login():
         data = form.data            # 接收表单数据
         # 判断用户名和密码是否匹配
         user = User.query.filter_by(email=data["email"]).first()    # 获取用户信息
-        if not user :
+        if not user:
             flash("邮箱不存在！", "err")           # 输出错误信息
-            return redirect(url_for("home.login")) # 调回登录页
+            return redirect(url_for("home.login"))  # 调回登录页
         if not user.check_pwd(data["pwd"]):     # 调用check_pwd()方法，检测用户名密码是否匹配
             flash("密码错误！", "err")           # 输出错误信息
-            return redirect(url_for("home.login")) # 调回登录页
+            return redirect(url_for("home.login"))  # 调回登录页
 
-        session["user_id"] = user.id                # 将user_id写入session, 后面用户判断用户是否登录
+        # 将user_id写入session, 后面用户判断用户是否登录
+        session["user_id"] = user.id
         # 将用户登录信息写入Userlog表
         userlog = Userlog(
             user_id=user.id,
             ip=request.remote_addr
         )
-        db.session.add(userlog) # 存入数据
+        db.session.add(userlog)  # 存入数据
         db.session.commit()     # 提交数据
-        return redirect(url_for("home.index")) # 登录成功，跳转到首页
-    return render_template("home/login.html", form=form) # 渲染登录页面模板
+        return redirect(url_for("home.index"))  # 登录成功，跳转到首页
+    return render_template("home/login.html", form=form)  # 渲染登录页面模板
+
 
 @home.route("/register/", methods=["GET", "POST"])
 def register():
@@ -59,17 +63,18 @@ def register():
         data = form.data            # 接收表单数据
         # 为User类属性赋值
         user = User(
-            username = data["username"],                # 用户名
-            sex = data["sex"],                          # 性别test
-            phone = data["phone"],                      # 手机号test
-            email = data["email"],                      # 邮箱
+            username=data["username"],                # 用户名
+            sex=data["sex"],                          # 性别test
+            phone=data["phone"],                      # 手机号test
+            email=data["email"],                      # 邮箱
             # st_number = data["st_number"],              # 学号/教工号test
-            pwd = generate_password_hash(data["pwd"]),  # 对密码加密
+            pwd=generate_password_hash(data["pwd"]),  # 对密码加密
         )
-        db.session.add(user) # 添加数据
+        db.session.add(user)  # 添加数据
         db.session.commit()  # 提交数据
-        flash("注册成功！", "ok") # 使用flask存储成功信息
-    return render_template("home/register.html", form=form) # 渲染模板
+        flash("注册成功！", "ok")  # 使用flask存储成功信息
+    return render_template("home/register.html", form=form)  # 渲染模板
+
 
 @home.route("/logout/")
 def logout():
@@ -78,7 +83,7 @@ def logout():
     """
     # 重定向到home模块下的登录。
     session.pop("user_id", None)
-    return redirect(url_for('home.login'))    
+    return redirect(url_for('home.login'))
 
 
 @home.route("/")
@@ -86,27 +91,37 @@ def index():
     """
     首页
     """
-    area = Area.query.all() # 获取所有学科
-    hot_area = Area.query.filter_by(is_recommended = 1).limit(2).all() # 获取热门学科
-    scenic = Scenic.query.filter_by(is_hot = 1).all() # 热门课程
-    return render_template('home/index.html',area=area,hot_area=hot_area,scenic=scenic) # 渲染模板
+    area = Area.query.all()  # 获取所有学科
+    hot_area = Area.query.filter_by(is_recommended=1).limit(2).all()  # 获取热门学科
+    scenic = Scenic.query.filter_by(is_hot=1).all()  # 热门课程
+    # 渲染模板
+    return render_template('home/index.html', area=area, hot_area=hot_area, scenic=scenic)
+
 
 @home.route("/info/<int:id>/")
 def info(id=None):  # id 为课程ID
     """
     详情页
     """
-    scenic = Scenic.query.get_or_404(int(id)) # 根据课程ID获取课程数据，如果不存在返回404
-    user_id = session.get('user_id',None)    # 获取用户ID,判断用户是否登录
-    if user_id :                              # 如果已经登录
+    print(int(id))
+    scenic = Scenic.query.get_or_404(int(id))  # 根据课程ID获取课程数据，如果不存在返回404
+    user_id = session.get('user_id', None)    # 获取用户ID,判断用户是否登录
+    if user_id:                              # 如果已经登录
         count = Collect.query.filter_by(      # 根据用户ID和课程ID判断用户是否已经收藏该课程
-            user_id =int(user_id),
+            user_id=int(user_id),
             scenic_id=int(id)
         ).count()
-    else :                                    # 用户未登录状态
+    else:                                    # 用户未登录状态
         user_id = 0
-        count = 0    
-    return render_template('home/info.html',scenic=scenic,user_id=user_id,count=count)   # 渲染模板
+        count = 0
+    # if int(id) == 6:
+    #     pdf_url = url_for('static',filename='pdf/java.pdf')
+    # else:
+    #     pdf_url = ''
+    pdf_url = url_for('static', filename='pdf/java.pdf')
+    # 渲染模板
+    return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url)
+
 
 @home.route("/collect_add/")
 @user_login
@@ -115,9 +130,9 @@ def collect_add():
     收藏景区
     """
     scenic_id = request.args.get("scenic_id", "")  # 接收传递的参数scenic_id
-    user_id   = session['user_id']                  # 获取当前用户的ID
+    user_id = session['user_id']                  # 获取当前用户的ID
     collect = Collect.query.filter_by(              # 根据用户ID和课程ID判断是否该收藏
-        user_id =int(user_id),
+        user_id=int(user_id),
         scenic_id=int(scenic_id)
     ).count()
     # 已收藏
@@ -126,7 +141,7 @@ def collect_add():
     # 未收藏进行收藏
     if collect == 0:
         collect = Collect(
-            user_id =int(user_id),
+            user_id=int(user_id),
             scenic_id=int(scenic_id)
         )
         db.session.add(collect)  # 添加数据
@@ -134,6 +149,7 @@ def collect_add():
         data = dict(ok=1)        # 写入字典
     import json                 # 导入模块
     return json.dumps(data)     # 返回json数据
+
 
 @home.route("/collect_cancel/")
 @user_login
@@ -143,12 +159,13 @@ def collect_cancel():
     """
     id = request.args.get("id", "")    # 获取课程ID
     user_id = session["user_id"]       # 获取当前用户ID
-    collect = Collect.query.filter_by(id=id,user_id=user_id).first() # 查找Collect表，查看记录是否存在
-    if collect :                      # 如果存在
+    collect = Collect.query.filter_by(
+        id=id, user_id=user_id).first()  # 查找Collect表，查看记录是否存在
+    if collect:                      # 如果存在
         db.session.delete(collect)     # 删除数据
         db.session.commit()             # 提交数据
         data = dict(ok=1)               # 写入字典
-    else :
+    else:
         data = dict(ok=-1)           # 写入字典
     import json                     # 引入json模块
     return json.dumps(data)         # 输出json格式
@@ -157,12 +174,14 @@ def collect_cancel():
 @home.route("/collect_list/")
 @user_login
 def collect_list():
-    page = request.args.get('page', 1, type=int) # 获取page参数值
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     # 根据user_id删选Collect表数据
-    page_data = Collect.query.filter_by(user_id = session['user_id']).order_by(
+    page_data = Collect.query.filter_by(user_id=session['user_id']).order_by(
         Collect.addtime.desc()
     ).paginate(page=page, per_page=3)                                     # 使用分页方法
-    return render_template('home/collect_list.html',page_data=page_data) # 渲染模板
+    # 渲染模板
+    return render_template('home/collect_list.html', page_data=page_data)
+
 
 @home.route("/travels/<int:id>/")
 def travels(id=None):
@@ -170,25 +189,28 @@ def travels(id=None):
     详情页
     """
     travels = Travels.query.get_or_404(int(id))
-    return render_template('home/travels.html',travels=travels) 
+    return render_template('home/travels.html', travels=travels)
+
 
 @home.route("/search/")
 def search():
     """
     搜素功能
     """
-    page = request.args.get('page', 1, type=int) # 获取page参数值 
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     area = Area.query.all()    # 获取所有城市
-    area_id = request.args.get('area_id',type=int)  # 学科
-    star = request.args.get('star',type=int)        # 星级
+    area_id = request.args.get('area_id', type=int)  # 学科
+    star = request.args.get('star', type=int)        # 星级
 
-    if area_id or star :    # 根据星级搜索课程
-        filters = and_(Scenic.area_id==area_id,Scenic.star==star)
-        page_data = Scenic.query.filter(filters).paginate(page=page, per_page=6)
-    else :                  # 搜索全部课程
+    if area_id or star:    # 根据星级搜索课程
+        filters = and_(Scenic.area_id == area_id, Scenic.star == star)
+        page_data = Scenic.query.filter(
+            filters).paginate(page=page, per_page=6)
+    else:                  # 搜索全部课程
         page_data = Scenic.query.paginate(page=page, per_page=3)
-    return render_template('home/search.html',page_data=page_data,area=area,area_id=area_id,star=star)
-    
+    return render_template('home/search.html', page_data=page_data, area=area, area_id=area_id, star=star)
+
+
 @home.route("/about/")
 def about():
     """
@@ -196,7 +218,8 @@ def about():
     """
     return render_template('home/about.html')
 
-@home.route("/contact/",methods=["GET", "POST"])
+
+@home.route("/contact/", methods=["GET", "POST"])
 def contact():
     """
     联系我们
@@ -206,11 +229,11 @@ def contact():
         data = form.data                # 接收用户提交的数据
         # 为属性赋值
         suggestion = Suggestion(
-            name = data["name"],
+            name=data["name"],
             email=data["email"],
-            content = data["content"],
+            content=data["content"],
         )
         db.session.add(suggestion)       # 添加数据
         db.session.commit()              # 提交数据
         flash("发送成功！", "ok")        # 用flask存储发送成功消息
-    return render_template('home/contact.html',form=form) # 渲染模板，并传递表单数据
+    return render_template('home/contact.html', form=form)  # 渲染模板，并传递表单数据
