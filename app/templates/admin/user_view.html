@@ -1,0 +1,107 @@
+{% extends 'admin/admin.html' %}
+
+{% block css %}
+    <style>
+        *{
+            font-family:"Microsoft YaHei";
+        }
+        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{
+            vertical-align:middle;
+            text-align:center;
+        }
+
+    </style>
+    <style>
+        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th{
+            vertical-align:middle;
+            text-align:left;
+        }
+        .td_bd{
+            font-weight:bold;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+<!--内容-->
+<section class="content-header">
+    <h1>易学通管理系统</h1>{# 修改 #}
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('admin.user_list') }}"><i class="fa fa-dashboard"></i> 管理员管理</a>{# 修改 #}
+        </li>
+        <li class="active">查看管理</li>{# 修改 #}
+    </ol>
+</section>
+<section class="content" id="showcontent">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-primary">
+                <div class="box-header">
+                    <h3 class="box-title">管理详情</h3>{# 修改 #}
+                </div>
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-hover">
+                        <tbody>
+                        <tr>
+                            <td class="td_bd">编号：</td>
+                            <td>{{ user.id }}</td>
+                        </tr>
+                        <tr>
+                            <td class="td_bd">昵称：</td>
+                            <td>{{ user.username }}</td>
+                        </tr>
+                        <tr>               {# 性别test #}
+                            <td class="td_bd">性别：</td>
+                            {% if user.sex == '1' %}
+                            <td>女</td>
+                            {% elif user.sex == '0' %}
+                            <td>男</td>
+                            {% else %}
+                            <td>None</td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td class="td_bd">邮箱：</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td class="td_bd">手机：</td>
+                            <td>{{ user.phone }}</td>
+                        </tr>
+                        <tr>
+                            <td class="td_bd">头像：</td>
+                            <td>
+                                <img style="width: 50px; height: 50px;"
+                                     src="{{ url_for('static', filename='uploads/users/huazai.jpg') }}"
+                                     class="img-responsive" alt="">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td_bd">注册时间：</td>
+                            <td>
+                                {{ user.addtime }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="td_bd">个性简介：</td>
+                            <td>
+                                {{ user.info }}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!--内容-->
+{% endblock %}
+
+{% block js %}
+    <script>
+    $(document).ready(function(){
+        $("#g-5").addClass("active");
+        $("#g-5-2").addClass("active");
+    });
+</script>
+{% endblock %}
