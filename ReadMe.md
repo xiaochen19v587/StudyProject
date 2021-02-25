@@ -45,9 +45,9 @@ sudo apt-get install mysql-server mysql-client
 # 登录数据库
 mysql -u root -p
 # 创建数据库
-create database travel;
+create database study;
 # 导入数据文件
-mysql -u root -p < travel.sql
+mysql -u root -p < study.sql
 ```
 
 #### python代码
