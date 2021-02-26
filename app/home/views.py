@@ -71,9 +71,13 @@ def register():
             # st_number = data["st_number"],              # 学号/教工号test
             pwd=generate_password_hash(data["pwd"]),  # 对密码加密
         )
-        db.session.add(user)  # 添加数据
-        db.session.commit()  # 提交数据
-        flash("注册成功！", "ok")  # 使用flask存储成功信息
+        try:
+            db.session.add(user)  # 添加数据
+            db.session.commit()  # 提交数据
+        except:
+            flash("注册失败！", "err")
+        else:
+            flash("注册成功！", "ok")  # 使用flask存储成功信息
     return render_template("home/register.html", form=form)  # 渲染模板
 
 
