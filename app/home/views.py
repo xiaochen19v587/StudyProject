@@ -8,6 +8,7 @@ from flask import render_template, url_for, redirect, flash, session, request
 from werkzeug.security import generate_password_hash
 from sqlalchemy import and_
 from functools import wraps
+import os
 
 
 def user_login(f):
@@ -92,10 +93,9 @@ def index():
     首页
     """
     area = Area.query.all()  # 获取所有学科
-    hot_area = Area.query.filter_by(is_recommended=1).limit(2).all()  # 获取热门学科
     scenic = Scenic.query.filter_by(is_hot=1).all()  # 热门课程
     # 渲染模板
-    return render_template('home/index.html', area=area, hot_area=hot_area, scenic=scenic)
+    return render_template('home/index.html', area=area, scenic=scenic)
 
 
 @home.route("/info/<int:id>/")
@@ -113,10 +113,14 @@ def info(id=None):  # id 为课程ID
     else:                                    # 用户未登录状态
         user_id = 0
         count = 0
-    video_url = 'https://www.runoob.com/try/demo_source/mov_bbb.mp4'
+    try:
+        with open(os.path.join(os.path.dirname(__file__), os.pardir, 'static/vedio/{}'.format(int(id)), '{}.txt'.format(scenic.title)), 'r') as f:
+            video_url = f.read()
+    except:
+        video_url = ''
     pdf_url = url_for(
         'static', filename='pdf/{}/{}.pdf'.format(int(id), scenic.title))
-    return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url,video_url=video_url)
+    return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url, video_url=video_url)
 
 
 @home.route("/collect_add/")

@@ -4,12 +4,13 @@ import uuid
 from datetime import datetime
 from app import db
 from . import admin
-from flask import render_template, redirect, url_for, flash, session, request, g, abort,make_response,current_app
-from app.admin.forms import LoginForm,PwdForm,AreaForm,ScenicForm,TravelsForm
-from app.models import Admin,Adminlog,Oplog,Userlog,Area,User,Suggestion,Scenic,Travels
+from flask import render_template, redirect, url_for, flash, session, request, g, abort, make_response, current_app
+from app.admin.forms import LoginForm, PwdForm, AreaForm, ScenicForm, TravelsForm
+from app.models import Admin, Adminlog, Oplog, Userlog, Area, User, Suggestion, Scenic, Travels
 from werkzeug.utils import secure_filename
-from sqlalchemy import or_ , and_
+from sqlalchemy import or_, and_
 from functools import wraps
+import shutil
 
 
 def admin_login(f):
@@ -25,6 +26,7 @@ def admin_login(f):
 
     return decorated_function
 
+
 def addOplog(reason):
     oplog = Oplog(
         admin_id=session["admin_id"],
@@ -34,15 +36,17 @@ def addOplog(reason):
     db.session.add(oplog)
     db.session.commit()
 
+
 def gen_rnd_filename():
     return datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4().hex)
+
 
 def change_filename(filename):
     """
     修改文件名称
     """
     fileinfo = os.path.splitext(filename)
-    filename =  gen_rnd_filename() + fileinfo[-1]
+    filename = gen_rnd_filename() + fileinfo[-1]
     return filename
 
 
@@ -50,6 +54,7 @@ def change_filename(filename):
 @admin_login
 def index():
     return render_template("admin/index.html")
+
 
 @admin.route("/login/", methods=["GET", "POST"])
 def login():
@@ -59,24 +64,26 @@ def login():
     form = LoginForm()   # 实例化登录表单
     if form.validate_on_submit():   # 验证提交表单
         data = form.data    # 接收数据
-        admin = Admin.query.filter_by(name=data["account"]).first() # 查找Admin表数据
+        admin = Admin.query.filter_by(
+            name=data["account"]).first()  # 查找Admin表数据
         # 密码错误时，check_pwd返回false,则此时not check_pwd(data["pwd"])为真。
         if not admin.check_pwd(data["pwd"]):
             flash("密码错误!", "err")   # 闪存错误信息
-            return redirect(url_for("admin.login")) # 跳转到后台登录页
+            return redirect(url_for("admin.login"))  # 跳转到后台登录页
         # 如果是正确的，就要定义session的会话进行保存。
         session["admin"] = data["account"]  # 存入session
-        session["admin_id"] = admin.id # 存入session
+        session["admin_id"] = admin.id  # 存入session
         # 创建数据
         adminlog = Adminlog(
             admin_id=admin.id,
             ip=request.remote_addr,
         )
-        db.session.add(adminlog) # 添加数据
-        db.session.commit() # 提交数据
-        return redirect(url_for("admin.index")) # 返回后台主页
+        db.session.add(adminlog)  # 添加数据
+        db.session.commit()  # 提交数据
+        return redirect(url_for("admin.index"))  # 返回后台主页
 
-    return render_template("admin/login.html",form=form)    
+    return render_template("admin/login.html", form=form)
+
 
 @admin.route('/logout/')
 @admin_login
@@ -88,7 +95,8 @@ def logout():
     session.pop("admin_id", None)
     return redirect(url_for("admin.login"))
 
-@admin.route('/pwd/',methods=["GET","POST"])
+
+@admin.route('/pwd/', methods=["GET", "POST"])
 @admin_login
 def pwd():
     """
@@ -113,7 +121,7 @@ def user_list():
     """
     会员列表
     """
-    page = request.args.get('page', 1, type=int) # 获取page参数值 
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     keyword = request.args.get('keyword', '', type=str)
 
     if keyword:
@@ -149,7 +157,7 @@ def user_del(id=None):
     """
     删除用户账号
     """
-    page = request.args.get('page',1,type=int)
+    page = request.args.get('page', 1, type=int)
     user = User.query.get_or_404(int(id))
     db.session.delete(user)
     db.session.commit()
@@ -164,11 +172,12 @@ def suggestion_list():
     """
     意见建议列表
     """
-    page = request.args.get('page', 1, type=int) # 获取page参数值
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     page_data = Suggestion.query.order_by(
         Suggestion.addtime.desc()
     ).paginate(page=page, per_page=5)
     return render_template("admin/suggestion_list.html", page_data=page_data)
+
 
 @admin.route("/suggestion/del/<int:id>/", methods=["GET"])
 @admin_login
@@ -176,16 +185,16 @@ def suggestion_del(id=None):
     """
     删除用户意见
     """
-    page = request.args.get('page',1,type=int)
+    page = request.args.get('page', 1, type=int)
     suggestion = Suggestion.query.get_or_404(int(id))
     db.session.delete(suggestion)
     db.session.commit()
-    addOplog("删除意见建议" )  # 添加日志
+    addOplog("删除意见建议")  # 添加日志
     flash("删除成功！", "ok")
     return redirect(url_for('admin.suggestion_list', page=page))
 
 
-@admin.route('/area/add/',methods=["GET","POST"])
+@admin.route('/area/add/', methods=["GET", "POST"])
 @admin_login
 def area_add():
     """
@@ -193,23 +202,24 @@ def area_add():
     """
     form = AreaForm()
     if form.validate_on_submit():
-        data = form.data # 接收数据
+        data = form.data  # 接收数据
         area = Area.query.filter_by(name=data["name"]).count()
         # 说明已经有这个学科了
         if area == 1:
             flash("学科已存在", "err")
             return redirect(url_for("admin.area_add"))
         area = Area(
-            name=data["name"],     
-            is_recommended = data['is_recommended'],
-            introduction = data['introduction']
+            name=data["name"],
+            is_recommended=data['is_recommended'],
+            introduction=data['introduction']
         )
         db.session.add(area)
         db.session.commit()
         addOplog("添加学科"+data["name"])  # 添加日志
         flash("学科添加成功", "ok")
         return redirect(url_for("admin.area_add"))
-    return render_template("admin/area_add.html",form=form)
+    return render_template("admin/area_add.html", form=form)
+
 
 @admin.route("/area/edit/<int:id>", methods=["GET", "POST"])
 @admin_login
@@ -246,18 +256,18 @@ def area_list():
     """
     标签列表
     """
-    name = request.args.get('name',type=str)     # 获取name参数值
-    page = request.args.get('page', 1, type=int) # 获取page参数值   
-    if name: # 搜索功能
+    name = request.args.get('name', type=str)     # 获取name参数值
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
+    if name:  # 搜索功能
         page_data = Area.query.filter_by(name=name).order_by(
             Area.addtime.desc()
         ).paginate(page=page, per_page=5)
-    else:   
+    else:
         # 查找数据
         page_data = Area.query.order_by(
             Area.addtime.desc()
         ).paginate(page=page, per_page=5)
-    return render_template("admin/area_list.html", page_data=page_data) # 渲染模板   
+    return render_template("admin/area_list.html", page_data=page_data)  # 渲染模板
 
 
 @admin.route("/area/del/<int:id>/", methods=["GET"])
@@ -274,13 +284,14 @@ def area_del(id=None):
     flash("学科<<{0}>>删除成功".format(area.name), "ok")
     return redirect(url_for("admin.area_list"))
 
+
 @admin.route("/oplog/list/", methods=["GET"])
 @admin_login
 def oplog_list():
     """
     操作日志管理
     """
-    page = request.args.get('page', 1, type=int) # 获取page参数值
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     page_data = Oplog.query.join(
         Admin
     ).filter(
@@ -297,7 +308,7 @@ def adminloginlog_list(page=None):
     """
     管理员登录日志
     """
-    page = request.args.get('page',1,type=int) # 获取page参数值
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
     page_data = Adminlog.query.join(
         Admin
     ).filter(
@@ -306,6 +317,7 @@ def adminloginlog_list(page=None):
         Adminlog.addtime.desc()
     ).paginate(page=page, per_page=10)
     return render_template("admin/adminloginlog_list.html", page_data=page_data)
+
 
 @admin.route("/userloginlog/list/", methods=["GET"])
 @admin_login
@@ -323,48 +335,64 @@ def userloginlog_list(page=None):
     ).paginate(page=page, per_page=5)
     return render_template("admin/userloginlog_list.html", page_data=page_data)
 
+
 @admin.route("/scenic/add/", methods=["GET", "POST"])
 @admin_login
 def scenic_add():
     """
     添加课程页面
     """
-    form = ScenicForm() # 实例化form表单
-    form.area_id.choices = [(v.id, v.name) for v in Area.query.all()] # 为area_id添加属性
+    form = ScenicForm()  # 实例化form表单
+    form.area_id.choices = [(v.id, v.name)
+                            for v in Area.query.all()]  # 为area_id添加属性
     if form.validate_on_submit():
         data = form.data
         # 判断课程是否存在
-        scenic_count = Scenic.query.filter_by(title=data["title"]).count()        
+        scenic_count = Scenic.query.filter_by(title=data["title"]).count()
         # 判断是否有重复数据。
-        if scenic_count == 1 :
+        if scenic_count == 1:
             flash("课程已经存在！", "err")
             return redirect(url_for('admin.scenic_add'))
-
-        file_logo = secure_filename(form.logo.data.filename) # 确保文件名
+        file_logo = secure_filename(form.logo.data.filename)  # 确保文件名
         if not os.path.exists(current_app.config["UP_DIR"]):
             # 创建一个多级目录
             os.makedirs(current_app.config["UP_DIR"])           # 创建文件夹
             os.chmod(current_app.config["UP_DIR"], "rw")        # 设置权限
-        logo = change_filename(file_logo) # 更改名称
-        form.logo.data.save(current_app.config["UP_DIR"] + logo) # 保存文件
+        logo = change_filename(file_logo)  # 更改名称
+        form.logo.data.save(current_app.config["UP_DIR"] + logo)  # 保存文件
         # 为Scenic类属性赋值
         scenic = Scenic(
             title=data["title"],
             logo=logo,
             star=int(data["star"]),
-            address = data["address"],
-            is_hot = int(data["is_hot"]),
-            is_recommended = int(data["is_recommended"]),
-            area_id = data["area_id"],
+            address=data["address"],
+            is_hot=int(data["is_hot"]),
+            is_recommended=int(data["is_recommended"]),
+            area_id=data["area_id"],
             introduction=data["introduction"],
             content=data["content"],
         )
         db.session.add(scenic)  # 添加数据
         db.session.commit()     # 提交数据
         addOplog("添加课程"+data["title"])  # 添加日志
-        flash("添加课程成功！", "ok") # 使用flash保存添加成功信息
-        return redirect(url_for('admin.scenic_add')) # 页面跳转
-    return render_template("admin/scenic_add.html", form=form) # 渲染模板
+        # 上传pdf文件
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/pdf/{}'.format(scenic.id))):
+            os.makedirs(os.path.join(os.path.dirname(__file__),
+                                     os.pardir, 'static/pdf/{}'.format(scenic.id)))
+        form.pdf.data.save(os.path.join(os.path.dirname(
+            __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
+        # 上传视频url
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/vedio/{}'.format(scenic.id))):
+            os.makedirs(os.path.join(os.path.dirname(__file__),
+                                     os.pardir, 'static/vedio/{}'.format(scenic.id)))
+            filename = os.path.join(os.path.dirname(__file__),
+                                    os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title))
+            with open(filename, 'w+') as f:
+                f.write(data['vedio'])
+        flash("添加课程成功！", "ok")  # 使用flash保存添加成功信息
+        return redirect(url_for('admin.scenic_add'))  # 页面跳转
+    return render_template("admin/scenic_add.html", form=form)  # 渲染模板
+
 
 @admin.route("/scenic/list/", methods=["GET"])
 @admin_login
@@ -372,17 +400,19 @@ def scenic_list():
     """
     课程列表页面
     """
-    title = request.args.get('title','',type=str)  # 获取查询标题
+    title = request.args.get('title', '', type=str)  # 获取查询标题
     page = request.args.get('page', 1, type=int)   # 获取page参数值
-    if title :                                     # 根据标题搜索课程
+    if title:                                     # 根据标题搜索课程
         page_data = Scenic.query.filter_by(title=title).order_by(
             Scenic.addtime.desc()                  # 根据添加时间降序
         ).paginate(page=page, per_page=5)          # 分页
-    else :                                         # 显示全部课程
+    else:                                         # 显示全部课程
         page_data = Scenic.query.order_by(
             Scenic.addtime.desc()                  # 根据添加时间降序
         ).paginate(page=page, per_page=5)          # 分页
-    return render_template("admin/scenic_list.html", page_data=page_data) # 渲染模板
+    # 渲染模板
+    return render_template("admin/scenic_list.html", page_data=page_data)
+
 
 @admin.route("/scenic/edit/<int:id>/", methods=["GET", "POST"])
 @admin_login
@@ -390,11 +420,12 @@ def scenic_edit(id=None):
     """
     编辑课程页面
     """
-    form = ScenicForm() # 实例化ScenicForm类
-    form.area_id.choices = [(v.id, v.name) for v in Area.query.all()]  # 为area_id添加属性
-    form.submit.label.text = "修改" # 修改提交按钮的文字
+    form = ScenicForm()  # 实例化ScenicForm类
+    form.area_id.choices = [(v.id, v.name)
+                            for v in Area.query.all()]  # 为area_id添加属性
+    form.submit.label.text = "修改"  # 修改提交按钮的文字
     form.logo.validators = []  # 初始化为空
-    scenic = Scenic.query.get_or_404(int(id)) # 根据ID查找课程是否存在
+    scenic = Scenic.query.get_or_404(int(id))  # 根据ID查找课程是否存在
     if request.method == "GET":        # 如果以GET方式提交，获取所有课程信息
         form.is_recommended.data = scenic.is_recommended
         form.is_hot.data = scenic.is_hot
@@ -404,7 +435,8 @@ def scenic_edit(id=None):
         form.introduction.data = scenic.introduction
     if form.validate_on_submit():     # 如果提交表单
         data = form.data              # 获取表单数据
-        scenic_count = Scenic.query.filter_by(title=data["title"]).count()  # 判断标题是否重复
+        scenic_count = Scenic.query.filter_by(
+            title=data["title"]).count()  # 判断标题是否重复
         # 判断是否有重复数据
         if scenic_count == 1 and scenic.title != data["title"]:
             flash("课程已经存在！", "err")
@@ -414,12 +446,14 @@ def scenic_edit(id=None):
             os.chmod(current_app.config["UP_DIR"], "rw")      # 设置读写权限
         # 上传图片
         if form.logo.data != "":
-            file_logo = secure_filename(form.logo.data.filename)           # 确保文件名安全
-            scenic.logo = change_filename(file_logo)                       #  更改文件名
-            form.logo.data.save(current_app.config["UP_DIR"] + scenic.logo) # 保存文件
+            file_logo = secure_filename(
+                form.logo.data.filename)           # 确保文件名安全
+            scenic.logo = change_filename(file_logo)  # 更改文件名
+            form.logo.data.save(
+                current_app.config["UP_DIR"] + scenic.logo)  # 保存文件
 
         # 属性赋值
-        scenic.title = data["title"]    
+        scenic.title = data["title"]
         scenic.address = data["address"]
         scenic.area_id = data["area_id"]
         scenic.star = int(data["star"])
@@ -428,11 +462,29 @@ def scenic_edit(id=None):
         scenic.introduction = data["introduction"]
         scenic.content = data["content"]
 
-        db.session.add(scenic) # 添加数据
+        # 更换pdf
+        if form.pdf.data != "":
+            print(form.pdf.data)
+            print(scenic.id)
+            if os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/pdf/{}/'.format(scenic.id))):
+                os.remove(os.path.join(os.path.dirname(
+                    __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
+                form.pdf.data.save(os.path.join(os.path.dirname(
+                    __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
+        # 修改视频url
+        with open(os.path.join(os.path.dirname(__file__),
+                               os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title)), 'w+') as f:
+            f.write(data['vedio'])
+
+        db.session.add(scenic)  # 添加数据
         db.session.commit()    # 提交数据
         flash("修改课程成功！", "ok")
-        return redirect(url_for('admin.scenic_edit', id=id)) # 跳转到编辑页面
-    return render_template("admin/scenic_edit.html", form=form, scenic=scenic) # 渲染模板，传递变量
+        return redirect(url_for('admin.scenic_edit', id=id))  # 跳转到编辑页面
+    # 渲染模板，传递变量
+    with open(os.path.join(os.path.dirname(__file__),
+                           os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title)), 'r') as f:
+        vedio_url = f.read()
+    return render_template("admin/scenic_edit.html", form=form, scenic=scenic, vedio_url=vedio_url)
 
 
 @admin.route("/scenic/del/<int:id>/", methods=["GET"])
@@ -443,10 +495,16 @@ def scenic_del(id=None):
     """
     scenic = Scenic.query.get_or_404(id)  # 根据课程ID查找数据
     db.session.delete(scenic)             # 删除数据
-    db.session.commit()                   # 提交数据
+    db.session.commit()
+    shutil.rmtree(os.path.join(os.path.dirname(
+        __file__), os.pardir, 'static/pdf/{}/'.format(id)))  # 删除pdf文件夹
+    shutil.rmtree(os.path.join(os.path.dirname(
+        __file__), os.pardir, 'static/vedio/{}/'.format(id)))  # 删除vedio文件夹
+    # 提交数据
     flash("课程删除成功", "ok")           # 使用flash存储成功信息
     addOplog("删除课程"+scenic.title)  # 添加日志
-    return redirect(url_for('admin.scenic_list', page=1)) # 渲染模板
+    return redirect(url_for('admin.scenic_list', page=1))  # 渲染模板
+
 
 @admin.route("/travels/add/", methods=["GET", "POST"])
 @admin_login
@@ -459,15 +517,15 @@ def travels_add():
     if form.validate_on_submit():
         data = form.data
         # 判断是否存在
-        travels_count = Travels.query.filter_by(title=data["title"]).count()        
+        travels_count = Travels.query.filter_by(title=data["title"]).count()
         # 判断是否有重复数据。
-        if travels_count == 1 :
+        if travels_count == 1:
             flash("学习攻略已经存在！", "err")
             return redirect(url_for('admin.travels_add'))
         travels = Travels(
             title=data["title"],
-            author = data["author"],
-            scenic_id = data["scenic_id"],
+            author=data["author"],
+            scenic_id=data["scenic_id"],
             content=data["content"],
         )
         db.session.add(travels)
@@ -477,20 +535,21 @@ def travels_add():
         return redirect(url_for('admin.travels_add'))
     return render_template("admin/travels_add.html", form=form)
 
+
 @admin.route("/travels/list/", methods=["GET"])
 @admin_login
 def travels_list():
     """
     课程列表页面
     """
-    keywords = request.args.get('keywords','',type=str) 
-    page = request.args.get('page', 1, type=int) # 获取page参数值
-    if keywords :
+    keywords = request.args.get('keywords', '', type=str)
+    page = request.args.get('page', 1, type=int)  # 获取page参数值
+    if keywords:
         # 使用like实现模糊查询
         page_data = Travels.query.filter(Travels.title.like("%"+keywords+"%")).order_by(
             Travels.addtime.desc()
         ).paginate(page=page, per_page=5)
-    else :
+    else:
         page_data = Travels.query.order_by(
             Travels.addtime.desc()
         ).paginate(page=page, per_page=5)
@@ -512,13 +571,13 @@ def travels_edit(id=None):
         form.content.data = travels.content
     if form.validate_on_submit():
         data = form.data
-        travels_count = Travels.query.filter_by(title=data["title"]).count()        
+        travels_count = Travels.query.filter_by(title=data["title"]).count()
         # 判断是否有重复数据
         if travels_count == 1 and travels.title != data["title"]:
             flash("攻略已经存在！", "err")
             return redirect(url_for('admin.travels_edit', id=id))
-   
-        travels.title = data["title"]    
+
+        travels.title = data["title"]
         travels.scenic_id = data["scenic_id"]
         travels.author = data["author"]
         travels.content = data["content"]
@@ -528,6 +587,7 @@ def travels_edit(id=None):
         flash("修改成功！", "ok")
         return redirect(url_for('admin.travels_edit', id=id))
     return render_template("admin/travels_edit.html", form=form, travels=travels)
+
 
 @admin.route("/travels/del/<int:id>/", methods=["GET"])
 @admin_login
@@ -556,8 +616,8 @@ def ckupload():
         fname, fext = os.path.splitext(fileobj.filename)
         rnd_name = '%s%s' % (gen_rnd_filename(), fext)
 
-        filepath = os.path.join(current_app.static_folder, 'uploads/ckeditor', rnd_name)
-        print(filepath)
+        filepath = os.path.join(current_app.static_folder,
+                                'uploads/ckeditor', rnd_name)
         # 检查路径是否存在，不存在则创建
         dirname = os.path.dirname(filepath)
         if not os.path.exists(dirname):
@@ -570,7 +630,8 @@ def ckupload():
 
         if not error:
             fileobj.save(filepath)
-            url = url_for('static', filename='%s/%s' % ('uploads/ckeditor', rnd_name))
+            url = url_for('static', filename='%s/%s' %
+                          ('uploads/ckeditor', rnd_name))
     else:
         error = 'post error'
 

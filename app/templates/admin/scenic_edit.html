@@ -95,6 +95,22 @@
                             </div>
                             {% endfor %}
                         </div>
+                        <!-- 上传pdf文件 -->
+                        <div class="form-group">
+                            <label for="input_logo">{{ form.pdf.label }}</label> {{ form.pdf }} {% for err in form.pdf.errors %}
+                            <div class="col-md-12">
+                                <p style="color: red">{{ err }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <!-- 上传视频url -->
+                        <div class="form-group">
+                            <label for="input_info">{{ form.vedio.label }}</label> {{ form.vedio }} {% for err in form.vedio.errors %}
+                            <div class="col-md-12">
+                                <p style="color: red">{{ err }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                     <div class="box-footer">
                         {{ form.csrf_token }} {{ form.submit }}
