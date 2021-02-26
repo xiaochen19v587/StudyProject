@@ -99,6 +99,7 @@ def index():
 
 
 @home.route("/info/<int:id>/")
+@user_login
 def info(id=None):  # id 为课程ID
     """
     详情页
