@@ -379,16 +379,24 @@ def scenic_add():
         if not os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/pdf/{}'.format(scenic.id))):
             os.makedirs(os.path.join(os.path.dirname(__file__),
                                      os.pardir, 'static/pdf/{}'.format(scenic.id)))
+        else:
+            shutil.rmtree(os.path.join(os.path.dirname(__file__),
+                                       os.pardir, 'static/pdf/{}'.format(scenic.id)))
+            os.makedirs(os.path.join(os.path.dirname(__file__),
+                                     os.pardir, 'static/pdf/{}'.format(scenic.id)))
         form.pdf.data.save(os.path.join(os.path.dirname(
             __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
-        # 上传视频url
+        # 上传视频
         if not os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/vedio/{}'.format(scenic.id))):
             os.makedirs(os.path.join(os.path.dirname(__file__),
                                      os.pardir, 'static/vedio/{}'.format(scenic.id)))
-            filename = os.path.join(os.path.dirname(__file__),
-                                    os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title))
-            with open(filename, 'w+') as f:
-                f.write(data['vedio'])
+        else:
+            shutil.rmtree(os.path.join(os.path.dirname(__file__),
+                                       os.pardir, 'static/vedio/{}'.format(scenic.id)))
+            os.makedirs(os.path.join(os.path.dirname(__file__),
+                                     os.pardir, 'static/vedio/{}'.format(scenic.id)))
+        form.vedio_mp4.data.save(os.path.join(os.path.dirname(
+            __file__), os.pardir, 'static/vedio/{}/{}.mp4'.format(scenic.id, scenic.title)))
         flash("添加课程成功！", "ok")  # 使用flash保存添加成功信息
         return redirect(url_for('admin.scenic_add'))  # 页面跳转
     return render_template("admin/scenic_add.html", form=form)  # 渲染模板
@@ -464,27 +472,35 @@ def scenic_edit(id=None):
 
         # 更换pdf
         if form.pdf.data != "":
-            print(form.pdf.data)
-            print(scenic.id)
             if os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/pdf/{}/'.format(scenic.id))):
-                os.remove(os.path.join(os.path.dirname(
-                    __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
-                form.pdf.data.save(os.path.join(os.path.dirname(
-                    __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
-        # 修改视频url
-        with open(os.path.join(os.path.dirname(__file__),
-                               os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title)), 'w+') as f:
-            f.write(data['vedio'])
+                shutil.rmtree(os.path.join(os.path.dirname(
+                    __file__), os.pardir, 'static/pdf/{}/'.format(id)))
+                os.makedirs(os.path.join(os.path.dirname(__file__),
+                                         os.pardir, 'static/pdf/{}'.format(scenic.id)))
+            else:
+                os.makedirs(os.path.join(os.path.dirname(__file__),
+                                         os.pardir, 'static/pdf/{}'.format(scenic.id)))
+            form.pdf.data.save(os.path.join(os.path.dirname(
+                __file__), os.pardir, 'static/pdf/{}/{}.pdf'.format(scenic.id, scenic.title)))
+        # 更换视频
+        if form.vedio_mp4.data != "":
+            if os.path.exists(os.path.join(os.path.dirname(__file__), os.pardir, 'static/vedio/{}'.format(scenic.id))):
+                shutil.rmtree(os.path.join(os.path.dirname(
+                    __file__), os.pardir, 'static/vedio/{}/'.format(id)))
+                os.makedirs(os.path.join(os.path.dirname(__file__),
+                                         os.pardir, 'static/vedio/{}'.format(scenic.id)))
+            else:
+                os.makedirs(os.path.join(os.path.dirname(__file__),
+                                         os.pardir, 'static/vedio/{}'.format(scenic.id)))
+            form.vedio_mp4.data.save(os.path.join(os.path.dirname(
+                __file__), os.pardir, 'static/vedio/{}/{}.mp4'.format(scenic.id, scenic.title)))
 
         db.session.add(scenic)  # 添加数据
         db.session.commit()    # 提交数据
         flash("修改课程成功！", "ok")
         return redirect(url_for('admin.scenic_edit', id=id))  # 跳转到编辑页面
     # 渲染模板，传递变量
-    with open(os.path.join(os.path.dirname(__file__),
-                           os.pardir, 'static/vedio/{}/{}.txt'.format(scenic.id, scenic.title)), 'r') as f:
-        vedio_url = f.read()
-    return render_template("admin/scenic_edit.html", form=form, scenic=scenic, vedio_url=vedio_url)
+    return render_template("admin/scenic_edit.html", form=form, scenic=scenic)
 
 
 @admin.route("/scenic/del/<int:id>/", methods=["GET"])

@@ -97,15 +97,15 @@
                         </div>
                         <!-- 上传pdf文件 -->
                         <div class="form-group">
-                            <label for="input_logo">{{ form.pdf.label }}</label> {{ form.pdf }} {% for err in form.pdf.errors %}
+                            <label for="input_pdf">{{ form.pdf.label }}</label> {{ form.pdf }} {% for err in form.pdf.errors %}
                             <div class="col-md-12">
                                 <p style="color: red">{{ err }}</p>
                             </div>
                             {% endfor %}
                         </div>
-                        <!-- 上传视频url -->
+                        <!-- 上传视频 -->
                         <div class="form-group">
-                            <label for="input_info">{{ form.vedio.label }}</label> {{ form.vedio }} {% for err in form.vedio.errors %}
+                            <label for="input_vedio_mp4">{{ form.vedio_mp4.label }}</label> {{ form.vedio_mp4 }} {% for err in form.vedio_mp4.errors %}
                             <div class="col-md-12">
                                 <p style="color: red">{{ err }}</p>
                             </div>

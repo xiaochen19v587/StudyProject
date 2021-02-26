@@ -113,11 +113,8 @@ def info(id=None):  # id 为课程ID
     else:                                    # 用户未登录状态
         user_id = 0
         count = 0
-    try:
-        with open(os.path.join(os.path.dirname(__file__), os.pardir, 'static/vedio/{}'.format(int(id)), '{}.txt'.format(scenic.title)), 'r') as f:
-            video_url = f.read()
-    except:
-        video_url = ''
+    video_url = url_for(
+        'static', filename='vedio/{}/{}.mp4'.format(int(id), scenic.title))
     pdf_url = url_for(
         'static', filename='pdf/{}/{}.pdf'.format(int(id), scenic.title))
     return render_template('home/info.html', scenic=scenic, user_id=user_id, count=count, pdf_url=pdf_url, video_url=video_url)

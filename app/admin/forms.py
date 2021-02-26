@@ -223,16 +223,13 @@ class ScenicForm(FlaskForm):
         ],
         description="pdf",
     )
-    vedio = TextAreaField(
-        label="视频文件url添加",
+    vedio_mp4 = FileField(
+        label="视频上传",
         validators=[
-            DataRequired("请输入视频url地址!"),
+            DataRequired("请上传视频！"),
+            FileAllowed(['mp4'], '请上传mp4格式文件!')
         ],
-        description="课程视频",
-        render_kw={
-            "class": "form-control",
-            "rows": 5
-        }
+        description="mp4",
     )
     submit = SubmitField(
         '添加',
