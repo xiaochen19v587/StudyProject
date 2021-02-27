@@ -34,6 +34,7 @@ CREATE TABLE `admin`  (
 -- ----------------------------
 INSERT INTO `admin` VALUES (1, 'admin', 'pbkdf2:sha256:50000$t1B4zFZd$b628f4506dd67f58e8f61571f0f07b27cbda33ad991676f90ab5308b7ff02a25');    -- 账户admin密码seuscse
 INSERT INTO `admin` VALUES (2, 'mr', 'pbkdf2:sha256:50000$6eKyhd1Q$8951b6eee62f86f2d98cbcb72cdb389b9b94d9763eaf0cd16d66e4ef4dfedf20');       -- 账户mr密码admin123
+INSERT INTO `admin` VALUES (3, 'bnm', 'pbkdf2:sha256:50000$MSh1x51n$04a110b589ccad68c3591be5585b06378af2a9857363cb34fb0ca4740b9735f9');       -- 账户bnm密码bnm
 
 -- ----------------------------
 -- Table structure for adminlog
