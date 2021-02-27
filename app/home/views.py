@@ -157,7 +157,7 @@ def collect_add():
 @user_login
 def collect_cancel():
     """
-    收藏景区
+    取消收藏景区
     """
     id = request.args.get("id", "")    # 获取课程ID
     user_id = session["user_id"]       # 获取当前用户ID
